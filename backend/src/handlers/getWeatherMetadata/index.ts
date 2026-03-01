@@ -8,51 +8,20 @@ import {
   getPsiByRegion,
   RegionNotFoundError,
 } from '../../services/psi/index.js';
-import { isValidRegion } from '../../services/psi/types.js';
+import type { Region } from '../../services/psi/types.js';
 import { getCurrentUvIndex } from '../../services/uv/index.js';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   const { latitude, longitude, region } = event.queryStringParameters ?? {};
-
-  if (!latitude || !longitude) {
-    return {
-      statusCode: 400,
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        error: 'Missing required query parameters: latitude and longitude',
-      }),
-    };
-  }
-
-  const parsedLatitude = parseFloat(latitude);
-  const parsedLongitude = parseFloat(longitude);
-
-  if (isNaN(parsedLatitude) || isNaN(parsedLongitude)) {
-    return {
-      statusCode: 400,
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        error: 'latitude and longitude must be valid numbers',
-      }),
-    };
-  }
-
-  if (region !== undefined && !isValidRegion(region)) {
-    return {
-      statusCode: 400,
-      headers: jsonHeaders,
-      body: JSON.stringify({
-        error: `Invalid region. Must be one of: west, east, central, south, north`,
-      }),
-    };
-  }
+  const parsedLatitude = parseFloat(latitude!);
+  const parsedLongitude = parseFloat(longitude!);
 
   try {
     const [temperatureResult, psiResult, uvResult] = await Promise.allSettled([
       getTemperatureByLocation(parsedLatitude, parsedLongitude),
-      region ? getPsiByRegion(region) : Promise.resolve(null),
+      region ? getPsiByRegion(region as Region) : Promise.resolve(null),
       getCurrentUvIndex(),
     ]);
 

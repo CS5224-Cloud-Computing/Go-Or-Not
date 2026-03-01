@@ -12,8 +12,6 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 30
-  httpApi:
-    cors: true
   environment:
     NODE_ENV: ${self:provider.stage}
     TABLE_NAME: ${self:custom.tableName}
