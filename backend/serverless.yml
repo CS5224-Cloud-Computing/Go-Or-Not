@@ -12,11 +12,10 @@ provider:
   stage: ${opt:stage, 'dev'}
   memorySize: 512
   timeout: 30
-  httpApi:
-    cors: true
   environment:
     NODE_ENV: ${self:provider.stage}
     TABLE_NAME: ${self:custom.tableName}
+    WEATHER_METADATA_CACHE_TABLE: ${self:custom.weatherMetadataTableName}
     IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
   iam:
     role:
@@ -33,11 +32,28 @@ provider:
 
 functions:
   health:
-    handler: src/handlers/health.handler
+    handler: src/handlers/health/index.handler
     events:
-      - httpApi:
+      - http:
           path: /health
           method: GET
+          cors: true
+
+  getWeatherMetadata:
+    handler: src/handlers/getWeatherMetadata/index.handler
+    events:
+      - http:
+          path: /weather-metadata
+          method: GET
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                latitude: true
+                longitude: true
+                region: false
+            schemas:
+              application/json: ${file(src/handlers/getWeatherMetadata/schema.json)}
 
 plugins:
   - serverless-esbuild
@@ -64,6 +80,7 @@ custom:
     reloadHandler: true
     noPrependStageInUrl: true
   tableName: go-or-not-${self:provider.stage}
+  weatherMetadataTableName: weather-metadata-cache-${self:provider.stage}
 
 resources:
   Resources:
@@ -82,6 +99,25 @@ resources:
             KeyType: HASH
           - AttributeName: sk
             KeyType: RANGE
+
+    WeatherMetadataCacheTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.weatherMetadataTableName}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
 package:
   individually: true

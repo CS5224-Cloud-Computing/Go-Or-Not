@@ -31,7 +31,8 @@ for (const tableProps of tableDefinitions) {
   // Replace serverless variables with actual values
   const tableName = tableProps.TableName
     .replace(/\$\{self:provider\.stage\}/g, stage)
-    .replace(/\$\{self:custom\.tableName\}/g, `go-or-not-${stage}`);
+    .replace(/\$\{self:custom\.tableName\}/g, `go-or-not-${stage}`)
+    .replace(/\$\{self:custom\.weatherMetadataTableName\}/g, `weather-metadata-cache-${stage}`);
 
   try {
     await client.send(

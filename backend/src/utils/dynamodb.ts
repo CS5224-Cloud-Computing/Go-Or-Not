@@ -13,9 +13,10 @@ const client = new DynamoDBClient(
           secretAccessKey: 'MockSecretAccessKey',
         },
       }
-    : { region: process.env.AWS_REGION },
+    : { region: process.env.AWS_REGION ?? 'ap-southeast-1' },
 );
 
 export const dynamoDb = DynamoDBDocumentClient.from(client);
 
 export const TABLE_NAME = process.env.TABLE_NAME || 'go-or-not-dev';
+export const WEATHER_METADATA_CACHE_TABLE = 'weather-metadata-cache-dev';

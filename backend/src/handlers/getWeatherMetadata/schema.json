@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "WeatherMetadataQuery",
+  "type": "object",
+  "properties": {
+    "latitude": {
+      "type": "string",
+      "pattern": "^-?([0-9]|[1-8][0-9]|90)(\\.[0-9]+)?$"
+    },
+    "longitude": {
+      "type": "string",
+      "pattern": "^-?([0-9]|[1-9][0-9]|1[0-7][0-9]|180)(\\.[0-9]+)?$"
+    },
+    "region": {
+      "type": "string",
+      "enum": ["west", "east", "central", "south", "north"]
+    }
+  },
+  "required": ["latitude", "longitude"]
+}
