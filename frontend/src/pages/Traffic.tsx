@@ -1,9 +1,16 @@
 import { useState } from 'react';
 
 const highways = [
-  { label: 'Highway 101', id: 'h101' },
-  { label: 'I-5 North', id: 'i5n' },
-  { label: 'BQE', id: 'bqe' },
+  { label: 'AYE', id: 'aye' },
+  { label: 'BKE', id: 'bke' },
+  { label: 'CTE', id: 'cte' },
+  { label: 'ECP', id: 'ecp' },
+  { label: 'KJE', id: 'kje' },
+  { label: 'KPE', id: 'kpe' },
+  { label: 'MCE', id: 'mce' },
+  { label: 'PIE', id: 'pie' },
+  { label: 'SLE', id: 'sle' },
+  { label: 'TPE', id: 'tpe' },
 ];
 
 const Traffic = () => {
