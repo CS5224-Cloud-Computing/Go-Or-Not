@@ -1,7 +1,7 @@
 version: 1
 
 # Backend (Serverless Framework)
-# stage is derived from the branch name:main → dev and prod → prod
+# stage is derived from the branch name: main → prod, all others → dev
 backend:
   phases:
     preBuild:
@@ -11,7 +11,7 @@ backend:
     build:
       commands:
         - |
-          if [ "$AWS_BRANCH" = "prod" ]; then
+          if [ "$AWS_BRANCH" = "main" ]; then
             STAGE=prod
           else
             STAGE=dev

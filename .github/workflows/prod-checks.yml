@@ -1,0 +1,95 @@
+name: Production Branch Checks
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    backend-checks:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./backend
+        
+        steps:
+            - uses: actions/checkout@v4
+            
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+                  cache: 'npm'
+                  cache-dependency-path: backend/package-lock.json
+            
+            - name: Install dependencies
+              run: npm ci
+            
+            - name: Lint
+              run: npm run lint --if-present
+            
+            - name: Type check (strict)
+              run: npm run type-check --if-present
+            
+            - name: Test with coverage
+              run: npm run test:coverage --if-present || npm run test --if-present
+
+    frontend-checks:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./frontend
+        
+        steps:
+            - uses: actions/checkout@v4
+            
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '18'
+                  cache: 'npm'
+                  cache-dependency-path: frontend/package-lock.json
+            
+            - name: Install dependencies
+              run: npm ci
+            
+            - name: Lint
+              run: npm run lint --if-present
+            
+            - name: Type check (strict)
+              run: npm run type-check --if-present
+            
+            - name: Test with coverage
+              run: npm run test:coverage --if-present || npm run test --if-present
+            
+            - name: Build
+              run: npm run build
+            
+            - name: Build size check
+              run: |
+                  SIZE=$(du -sh dist | cut -f1)
+                  echo "Frontend bundle size: $SIZE"
+
+    security-checks:
+        runs-on: ubuntu-latest
+        
+        steps:
+            - uses: actions/checkout@v4
+            
+            - name: Run npm audit (backend)
+              working-directory: ./backend
+              continue-on-error: true
+              run: npm audit --audit-level=moderate
+            
+            - name: Run npm audit (frontend)
+              working-directory: ./frontend
+              continue-on-error: true
+              run: npm audit --audit-level=moderate
+
+    amplify-notification:
+        runs-on: ubuntu-latest
+        needs: [backend-checks, frontend-checks, security-checks]
+        if: github.event_name == 'push' && success()
+        
+        steps:
+            - name: Notify - All prod checks passed
+              run: echo "All production checks passed. AWS Amplify will now deploy to prod stage"
