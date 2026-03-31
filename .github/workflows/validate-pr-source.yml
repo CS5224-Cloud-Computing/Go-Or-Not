@@ -1,0 +1,33 @@
+name: Validate PR Source Branch
+
+on:
+    pull_request:
+        branches: [main]
+
+jobs:
+    validate-source-branch:
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: Check PR source branch
+              run: |
+                  SOURCE_BRANCH="${{ github.head_ref }}"
+                  TARGET_BRANCH="${{ github.base_ref }}"
+                  
+                  echo "Source Branch: $SOURCE_BRANCH"
+                  echo "Target Branch: $TARGET_BRANCH"
+                  
+                  if [ "$SOURCE_BRANCH" != "dev" ]; then
+                    echo "ERROR: Only PRs from the 'dev' branch can merge to 'main' (production)"
+                    echo ""
+                    echo "Merge from: $SOURCE_BRANCH"
+                    echo "Merge to:   $TARGET_BRANCH"
+                    echo ""
+                    echo "To merge to main, create a PR from the 'dev' branch instead:"
+                    echo "   1. Push your changes to 'dev'"
+                    echo "   2. Create a PR from 'dev' → 'main'"
+                    exit 1
+                  fi
+                  
+                  echo "SUCCESS: PR from 'dev' branch is allowed to merge to 'main'"
+                  exit 0
