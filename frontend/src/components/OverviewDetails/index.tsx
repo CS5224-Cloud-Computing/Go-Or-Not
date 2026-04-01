@@ -92,9 +92,9 @@ export const OverviewDetails: React.FC<OverviewDetailsProps> = ({
       }
 
       if (weatherMetadata.psi) {
-        const psiValue =
-          recommendationData.factors.psiValue ??
-          weatherMetadata.psi.data.psiTwentyFourHourly;
+        // const psiValue =
+        //   recommendationData.factors.psiValue ??
+        //   weatherMetadata.psi.data.psiTwentyFourHourly;
 
         const pm25Value = weatherMetadata.psi.data.pm25TwentyFourHourly;
         const pm25Category = toPm25Category(pm25Value);
