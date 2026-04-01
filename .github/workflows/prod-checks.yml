@@ -1,8 +1,6 @@
 name: Production Branch Checks
 
 on:
-    push:
-        branches: [main]
     pull_request:
         branches: [main]
 
@@ -14,9 +12,9 @@ jobs:
                 working-directory: ./backend
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
                   node-version: '18'
                   cache: 'npm'
@@ -41,9 +39,9 @@ jobs:
                 working-directory: ./frontend
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
                   node-version: '18'
                   cache: 'npm'
@@ -73,7 +71,7 @@ jobs:
         runs-on: ubuntu-latest
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             
             - name: Run npm audit (backend)
               working-directory: ./backend
@@ -85,11 +83,3 @@ jobs:
               continue-on-error: true
               run: npm audit --audit-level=moderate
 
-    amplify-notification:
-        runs-on: ubuntu-latest
-        needs: [backend-checks, frontend-checks, security-checks]
-        if: github.event_name == 'push' && success()
-        
-        steps:
-            - name: Notify - All prod checks passed
-              run: echo "All production checks passed. AWS Amplify will now deploy to prod stage"

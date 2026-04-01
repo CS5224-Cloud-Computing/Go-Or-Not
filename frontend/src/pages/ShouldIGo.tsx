@@ -227,7 +227,7 @@ const ShouldIGo = () => {
       const rawData = await parkingRes.json();
       const parkingData: ParkingResponse[] = (rawData.parking || []).slice(
         0,
-        3,
+        5,
       );
       const markerStrings = await Promise.all(
         parkingData.map(async (cp: ParkingResponse) => {

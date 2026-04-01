@@ -2,7 +2,7 @@ name: Pull Request Checks
 
 on:
     pull_request:
-        branches: [main, dev]
+        branches: [dev]
 
 jobs:
     backend-checks:
@@ -12,9 +12,9 @@ jobs:
                 working-directory: ./backend
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
                   node-version: '18'
                   cache: 'npm'
@@ -39,9 +39,9 @@ jobs:
                 working-directory: ./frontend
         
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
                   node-version: '18'
                   cache: 'npm'
@@ -62,18 +62,3 @@ jobs:
             - name: Build
               run: npm run build
 
-    pr-validation:
-        runs-on: ubuntu-latest
-        needs: [backend-checks, frontend-checks]
-        if: always()
-        
-        steps:
-            - name: Check results
-              if: failure()
-              run: |
-                  echo "PR validation failed"
-                  exit 1
-            
-            - name: Success
-              if: success()
-              run: echo "PR validation passed, ready for review"
