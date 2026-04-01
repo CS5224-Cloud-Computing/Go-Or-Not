@@ -99,18 +99,77 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
         const latest = await invokeOrchestrator(item);
 
         if (senderEmail) {
+          const score = latest.score ?? 0;
+          const scorePercentage = Math.round(score * 100);
+
+          const getScoreIcon = (recommendation: string | undefined): string => {
+            switch (recommendation) {
+              case 'GO':
+                return '🟢';
+              case 'MAYBE':
+                return '🟡';
+              case 'NO_GO':
+                return '🔴';
+              default:
+                return '⚪';
+            }
+          };
+
+          const getScoreInterpretation = (recommendation: string | undefined): string => {
+            switch (recommendation) {
+              case 'GO':
+                return 'Conditions are great! Everything looks favorable for your outing.';
+              case 'MAYBE':
+                return 'Conditions are mixed. Some factors are good, but there may be minor concerns.';
+              case 'NO_GO':
+                return 'Conditions are not ideal. Consider rescheduling your outing if possible.';
+              default:
+                return '';
+            }
+          };
+
+          const locationDisplay = item.postalCode
+            ? `Postal Code: ${item.postalCode}`
+            : `Location: ${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`;
+
+          const nextCheckTime = new Date((item.nextCheckAt + item.notifyAfterHours * 3600) * 1000);
+          const nextCheckTimeString = nextCheckTime.toLocaleString('en-SG', {
+            timeZone: 'Asia/Singapore',
+          });
+
           await sesClient.send(
             new SendEmailCommand({
               Source: senderEmail,
               Destination: { ToAddresses: [item.email] },
               Message: {
-                Subject: { Data: 'Go-Or-Not update for your destination' },
+                Subject: { Data: `${getScoreIcon(latest.recommendation)} Go-Or-Not: ${latest.recommendation ?? 'UNKNOWN'}` },
                 Body: {
                   Text: {
                     Data:
-                      `Recommendation: ${latest.recommendation ?? 'N/A'}\n` +
-                      `Score: ${latest.score ?? 'N/A'}\n` +
-                      `Summary: ${latest.summary ?? 'N/A'}\n`,
+                      `Hello!\n\n` +
+                      `Here's your latest Go-Or-Not update:\n\n` +
+                      `${getScoreIcon(latest.recommendation)} RECOMMENDATION: ${latest.recommendation ?? 'N/A'} (Score: ${scorePercentage}%)\n` +
+                      `${getScoreInterpretation(latest.recommendation)}\n\n` +
+                      `LOCATION\n` +
+                      `${locationDisplay}\n\n` +
+                      `DETAILS\n` +
+                      `${latest.summary ?? 'No additional details available.'}\n\n` +
+                      `NEXT UPDATE\n` +
+                      `You'll receive your next check-in on ${nextCheckTimeString} SGT\n\n` +
+                      `SCORE BREAKDOWN\n` +
+                      `Your recommendation is based on analyzing:\n` +
+                      `• Weather (30% weight): Temperature and forecast conditions\n` +
+                      `• Parking (40% weight): Availability and occupancy rates\n` +
+                      `• Air Quality (25% weight): PSI (Pollutant Standards Index)\n` +
+                      `• UV Index (5% weight): Sun exposure levels\n\n` +
+                      `Scoring Ranges\n` +
+                      `🟢 67%+ = GO: Excellent conditions\n` +
+                      `🟡 45-66% = MAYBE: Acceptable with some concerns\n` +
+                      `🔴 Below 45% = NO_GO: Challenging conditions\n\n` +
+                      `For detailed breakdowns and to manage your subscriptions, visit the app.\n\n` +
+                      `---\n` +
+                      `To unsubscribe from notifications, access your account settings in the Go-Or-Not app.\n\n` +
+                      `Best regards,\nThe Go-Or-Not Team`,
                   },
                 },
               },

@@ -129,17 +129,35 @@ export const handler = async (
       verifyUrl.searchParams.set('subscriptionKey', subscriptionKey);
       verifyUrl.searchParams.set('token', verificationToken);
 
+      const locationDisplay = postalCode
+        ? `📍 Postal Code: ${postalCode}`
+        : `📍 Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+
       await sesClient.send(
         new SendEmailCommand({
           Source: senderEmail,
           Destination: { ToAddresses: [email] },
           Message: {
-            Subject: { Data: 'Confirm your Go-Or-Not notification subscription' },
+            Subject: { Data: '✓ Confirm your Go-Or-Not notification subscription' },
             Body: {
               Text: {
                 Data:
-                  `Please verify your subscription by visiting: ${verifyUrl.toString()}\n\n` +
-                  `If you did not request this, you can ignore this email.`,
+                  `Welcome to Go-Or-Not!\n\n` +
+                  `We're excited to help you make smarter decisions about your outings. Go-Or-Not analyses weather, parking availability, air quality (PSI), and UV index to give you personalized recommendations.\n\n` +
+                  `VERIFY YOUR EMAIL\n` +
+                  `To activate your notifications, please confirm this email by visiting:\n\n` +
+                  `${verifyUrl.toString()}\n\n` +
+                  `SUBSCRIPTION DETAILS\n` +
+                  `${locationDisplay}\n` +
+                  `Update Frequency: Every ${notifyAfterHours} hour(s)\n\n` +
+                  `WHAT YOU'LL RECEIVE\n` +
+                  `Once verified, you'll get timely recommendations about whether it's a good time to go out, based on:\n` +
+                  `🌤️  Weather conditions and temperature\n` +
+                  `🅿️  Parking availability\n` +
+                  `💨 Air quality (PSI)\n` +
+                  `☀️  UV index\n\n` +
+                  `If you did not request this subscription, you can safely ignore this email.\n\n` +
+                  `Best regards,\nThe Go-Or-Not Team`,
               },
             },
           },
