@@ -222,7 +222,7 @@ Branch-to-stage mapping is configured in `amplify.yml`:
 
 ### CI/CD Workflows (GitHub Actions)
 
-Three workflows enforce code quality and deployment safety:
+Four workflows enforce code quality, release safety, and deployment visibility:
 
 #### Purpose
 
@@ -232,38 +232,69 @@ These workflows ensure:
 - **Production Safety** — Production deployments have extra validation and security checks
 - **Workflow Compliance** — Developers follow the dev→main merge pattern consistently
 - **Early Error Detection** — Issues are caught during PR review, not after production deploy
+- **Deployment Visibility** — Amplify deployment status appears in GitHub Actions for dev and main
 
-#### Workflow Details
-
-**pull-request.yml** — Runs on all PRs to `main` or `dev`
+#### **pull-request.yml** — Runs on PRs to `dev`
 - **Purpose**: Prevent low-quality code from merging
 - Validates backend: lint, type check, tests
 - Validates frontend: lint, type check, tests, build
-- Must pass before PR can merge
+- Must pass before PR to dev can merge
 - Fails fast so developers fix issues early
 
-**validate-pr-source.yml** — Runs on PRs to `main` branch
+#### **validate-pr-source.yml** — Runs on PRs to `main` branch
 - **Purpose**: Enforce staging gate before production (ensures dev→main workflow)
 - **Enforces**: Only `dev` branch can merge to `main` (production)
 - Blocks PRs from feature branches directly to main
 - Guides developers to merge via dev first
 - Prevents accidental direct production deployments
 
-**prod-checks.yml** — Runs on pushes to `main` branch (before production deploy)
+#### **prod-checks.yml** — Runs on PRs to `main`
 - **Purpose**: Extra validation layer for production releases
 - Stricter validation: includes test coverage, security audits
-- Runs after pull-request.yml and validate-pr-source.yml pass
+- Runs for dev→main release PRs
 - Scans for dependency vulnerabilities
 - Checks frontend bundle size
 - Prevents insecure or broken production deployments
 
-**View Workflow Status:**
+#### **amplify-deployment-status.yml** — Runs on pushes to `dev` and `main`
+- **Purpose**: Show Amplify deployment result directly in GitHub Actions
+- Polls AWS Amplify for latest job on the pushed branch
+- Marks workflow as failed for failed or cancelled deployments
+- Adds deployment summary (branch, job id, status, URL) to run output
+
+**Required GitHub Repository Secrets:**
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AMPLIFY_APP_ID`
+- `AWS_REGION` (optional; defaults to `ap-southeast-1`)
+
+**Security considerations:**
+- Identity & Access Management (IAM) Best Practices
+   - To prevent unauthorized access to the broader AWS environment, a dedicated **IAM user** was used with restricted, read-only permissions for Amplify.
+   - Dedicated IAM User: A specific service user was created, to be used solely for CI/CD.
+   - Policy Definition: A custom JSON policy was attached to the specific service user. This policy explicitly restricts the user to viewing deployment data without the ability to modify or delete resources.
+      - **Principle of Least Privilege:** Only grant the absolute minimum permissions required for the task. For monitoring Amplify, this means restricting access to Read operations only (amplify:Get*, amplify:List*), preventing the CI/CD pipeline from accidentally deleting or modifying resources.
+   - Permissions:
+      - `amplify:GetApp`: Retrieve metadata about the Amplify App
+      - `amplify:GetJob`: View specific details of a build/deployment job
+      - `amplify:ListJobs`: List recent deployment history
+- Secrets Handling and Masking
+   - Sensitive credentials were stored in **GitHub Actions Secrets**, which are encrypted at rest and masked in all execution logs.
+      - Settings > Secrets and variables > Actions
+      - Automatic Masking: GitHub automatically attempts to redact secrets from workflow logs (replacing them with `***`).
+   - `AWS_ACCESS_KEY_ID`: The Access Key for the dedicated IAM user
+   - `AWS_SECRET_ACCESS_KEY`: The Secret Key for the dedicated IAM user
+   - `AWS_REGION`: The AWS region where the Amplify app is hosted (e.g., ap-southeast-1)
+   - `AMPLIFY_APP_ID`: The unique ID for the Amplify project
+
+
+#### **View Workflow Status:**
 - **GitHub Actions tab**: See all workflow runs and logs
 - **Pull Request**: See check status at bottom of PR description
 - **Commit**: See status badge on commits in history
 - **Failed checks**: Click to view detailed error logs
 
-**Important: Merge Restrictions**
+#### **Important: Merge Restrictions**
 - ✅ PRs from `dev` → `main` will pass all checks and deploy to production
 - ❌ PRs from `feature/*` → `main` will fail validation
 - ❌ PRs from any other branch → `main` will fail validation
@@ -277,9 +308,10 @@ To release features to production:
 ### Monitoring Deployments
 
 #### On GitHub
-1. Go to repo → **Deployments** tab to see current status
-2. Go to **Actions** tab to view workflow run history
-3. Pull requests show check status before merge
+1. Go to repo → **Actions** tab
+2. Open workflow run **Amplify Deployment Status** for your push to `dev` or `main`
+3. Check run result and step summary for branch, deployment status, and URL
+4. Pull requests still show CI check status before merge
 
 #### On AWS Amplify Console
 1. Go to [Amplify Console](https://console.aws.amazon.com/amplify)
@@ -301,16 +333,17 @@ To release features to production:
    ↓
 2. Create PR to dev or main
    ↓
-3. GitHub Actions: pull-request.yml runs
-   ├─ Backend & frontend validation
-   └─ (all branches)
+3. If PR is to dev:
+   └─ GitHub Actions: pull-request.yml runs
+      ├─ Backend & frontend validation
+      └─ Feedback before merge to dev
    ↓
 4. If PR to main:
    └─ GitHub Actions: validate-pr-source.yml runs
       ├─ Checks if source is 'dev' branch
       └─ ❌ Fails if not from dev (shows helpful message)
    ↓ (only if from dev)
-5. If PR to main:
+5. If PR to main (and source is dev):
    └─ GitHub Actions: prod-checks.yml runs
       ├─ Stricter validation
       ├─ Security audits
@@ -319,6 +352,7 @@ To release features to production:
 6. Review and merge PR
    ↓
 7. Merge to dev or main triggers Amplify deploy
+   └─ GitHub Actions: amplify-deployment-status.yml polls and reports deployment result
    ↓
 8. Amplify deploys:
    - Backend: Serverless Framework deploys Lambda/DynamoDB
