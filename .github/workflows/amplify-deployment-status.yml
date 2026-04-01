@@ -1,0 +1,105 @@
+name: Amplify Deployment Status
+
+on:
+    push:
+        branches: [dev, main]
+    workflow_dispatch:
+
+jobs:
+    amplify-deployment-status:
+        runs-on: ubuntu-latest
+        timeout-minutes: 35
+
+        steps:
+            - name: Validate required secrets
+              run: |
+                  if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ] || [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ] || [ -z "${{ secrets.AMPLIFY_APP_ID }}" ]; then
+                    echo "Missing required secrets. Add AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AMPLIFY_APP_ID in GitHub repo settings."
+                    exit 1
+                  fi
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+
+            - name: Wait for Amplify deployment result
+              env:
+                  APP_ID: ${{ secrets.AMPLIFY_APP_ID }}
+                  BRANCH_NAME: ${{ github.ref_name }}
+              run: |
+                  set -euo pipefail
+
+                  echo "Checking latest Amplify job for branch: ${BRANCH_NAME}"
+
+                  JOB_ID="$(aws amplify list-jobs \
+                    --app-id "${APP_ID}" \
+                    --branch-name "${BRANCH_NAME}" \
+                    --max-results 1 \
+                    --query 'jobSummaries[0].jobId' \
+                    --output text)"
+
+                  if [ -z "${JOB_ID}" ] || [ "${JOB_ID}" = "None" ]; then
+                    echo "No Amplify deployment job found for branch ${BRANCH_NAME}."
+                    exit 1
+                  fi
+
+                  echo "Latest Amplify job id: ${JOB_ID}"
+
+                  MAX_ATTEMPTS=60
+                  ATTEMPT=1
+
+                  while [ ${ATTEMPT} -le ${MAX_ATTEMPTS} ]; do
+                    STATUS="$(aws amplify get-job \
+                      --app-id "${APP_ID}" \
+                      --branch-name "${BRANCH_NAME}" \
+                      --job-id "${JOB_ID}" \
+                      --query 'job.summary.status' \
+                      --output text)"
+
+                    echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS}: status=${STATUS}"
+
+                    if [ "${STATUS}" = "SUCCEED" ]; then
+                      DEFAULT_DOMAIN="$(aws amplify get-app --app-id "${APP_ID}" --query 'app.defaultDomain' --output text)"
+                      DEPLOY_URL="https://${BRANCH_NAME}.${DEFAULT_DOMAIN}"
+
+                      {
+                        echo "## Amplify Deployment Status"
+                        echo "- Branch: ${BRANCH_NAME}"
+                        echo "- Job ID: ${JOB_ID}"
+                        echo "- Status: SUCCEED"
+                        echo "- URL: ${DEPLOY_URL}"
+                      } >> "${GITHUB_STEP_SUMMARY}"
+
+                      exit 0
+                    fi
+
+                    if [ "${STATUS}" = "FAILED" ] || [ "${STATUS}" = "CANCELLED" ]; then
+                      {
+                        echo "## Amplify Deployment Status"
+                        echo "- Branch: ${BRANCH_NAME}"
+                        echo "- Job ID: ${JOB_ID}"
+                        echo "- Status: ${STATUS}"
+                        echo "- Result: Deployment did not complete successfully"
+                      } >> "${GITHUB_STEP_SUMMARY}"
+
+                      echo "Amplify deployment ${STATUS}."
+                      exit 1
+                    fi
+
+                    ATTEMPT=$((ATTEMPT + 1))
+                    sleep 30
+                  done
+
+                  {
+                    echo "## Amplify Deployment Status"
+                    echo "- Branch: ${BRANCH_NAME}"
+                    echo "- Job ID: ${JOB_ID}"
+                    echo "- Status: TIMEOUT"
+                    echo "- Result: Timed out waiting for Amplify deployment"
+                  } >> "${GITHUB_STEP_SUMMARY}"
+
+                  echo "Timed out waiting for Amplify deployment status."
+                  exit 1

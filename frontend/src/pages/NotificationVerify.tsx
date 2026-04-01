@@ -10,13 +10,16 @@ const NotificationVerify = () => {
   const [searchParams] = useSearchParams();
   const subscriptionKey = searchParams.get('subscriptionKey');
   const token = searchParams.get('token');
-  const [state, setState] = useState<VerifyState>('idle');
-  const [message, setMessage] = useState('');
+  const hasRequiredParams = Boolean(subscriptionKey && token);
+  const [state, setState] = useState<VerifyState>(
+    hasRequiredParams ? 'idle' : 'error',
+  );
+  const [message, setMessage] = useState(
+    hasRequiredParams ? '' : 'Verification link is incomplete.',
+  );
 
   useEffect(() => {
-    if (!subscriptionKey || !token) {
-      setState('error');
-      setMessage('Verification link is incomplete.');
+    if (!hasRequiredParams) {
       return;
     }
 
@@ -27,8 +30,8 @@ const NotificationVerify = () => {
           ? API_BASE_URL
           : `${API_BASE_URL}/`;
         const endpoint = new URL('notifications/verify', normalizedApiBase);
-        endpoint.searchParams.set('subscriptionKey', subscriptionKey);
-        endpoint.searchParams.set('token', token);
+        endpoint.searchParams.set('subscriptionKey', subscriptionKey!);
+        endpoint.searchParams.set('token', token!);
 
         const response = await fetch(endpoint.toString());
         const payload = await response.json();
@@ -50,7 +53,7 @@ const NotificationVerify = () => {
     };
 
     runVerification();
-  }, [subscriptionKey, token]);
+  }, [hasRequiredParams, subscriptionKey, token]);
 
   const color = state === 'error' ? '#C80000' : '#008E9B';
 

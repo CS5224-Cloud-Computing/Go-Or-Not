@@ -5,15 +5,14 @@ import {
   getTemperatureByLocation,
   getWindByLocation,
 } from '../../services/temperature/index.js';
-import { getPsiByLocation, getPsiByRegion } from '../../services/psi/index.js';
-import type { Region } from '../../services/psi/types.js';
+import { getPsiByLocation } from '../../services/psi/index.js';
 import { getCurrentUvIndex } from '../../services/uv/index.js';
 import { extractError } from '../../utils/utils.js';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
-  const { latitude, longitude, region } = event.queryStringParameters ?? {};
+  const { latitude, longitude } = event.queryStringParameters ?? {};
   const parsedLatitude = parseFloat(latitude!);
   const parsedLongitude = parseFloat(longitude!);
 
