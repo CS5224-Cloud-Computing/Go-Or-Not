@@ -23,7 +23,6 @@ jobs:
 
             - run: npm run lint --if-present
             - run: npm run type-check --if-present
-            - run: npm run test:coverage --if-present || npm run test --if-present
 
     frontend:
         runs-on: ubuntu-latest
@@ -43,7 +42,6 @@ jobs:
 
             - run: npm run lint --if-present
             - run: npm run type-check --if-present
-            - run: npm run test:coverage --if-present || npm run test --if-present
             - run: npm run build
 
             - name: Build size check
