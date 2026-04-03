@@ -13,12 +13,19 @@ backend:
         - |
           if [ "$AWS_BRANCH" = "main" ]; then
             STAGE=prod
+            export APP_BASE_URL="$APP_BASE_URL_PROD"
           else
             STAGE=dev
+            export APP_BASE_URL="$APP_BASE_URL_DEV"
           fi
         - |
           if [ -z "$SERVERLESS_ACCESS_KEY" ] && [ -z "$SERVERLESS_LICENSE_KEY" ]; then
             echo "Missing Serverless auth env var. Set SERVERLESS_ACCESS_KEY (recommended) or SERVERLESS_LICENSE_KEY in Amplify env vars."
+            exit 1
+          fi
+        - |
+          if [ -z "$APP_BASE_URL" ]; then
+            echo "Missing branch-specific APP_BASE_URL. Set APP_BASE_URL_PROD and APP_BASE_URL_DEV in Amplify env vars."
             exit 1
           fi
         - npx serverless deploy --stage $STAGE --region ap-southeast-1
@@ -32,6 +39,17 @@ frontend:
     build:
       commands:
         - cd $CODEBUILD_SRC_DIR/Go-Or-Not/frontend
+        - |
+          if [ "$AWS_BRANCH" = "main" ]; then
+            export VITE_API_BASE_URL="$VITE_API_BASE_URL_PROD"
+          else
+            export VITE_API_BASE_URL="$VITE_API_BASE_URL_DEV"
+          fi
+        - |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "Missing branch-specific VITE_API_BASE_URL. Set VITE_API_BASE_URL_PROD and VITE_API_BASE_URL_DEV in Amplify env vars."
+            exit 1
+          fi
         - npm run build
 
   artifacts:
