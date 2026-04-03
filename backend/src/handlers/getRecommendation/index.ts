@@ -39,7 +39,9 @@ const SINGAPORE_MONTHLY_LOW_C = [
 ] as const;
 
 const getLambdaClient = (event: APIGatewayProxyEvent): LambdaClient => {
-  const host = (event.headers.host ?? event.headers.Host ?? '').toLowerCase();
+  const host = (
+    event.headers?.host ?? event.headers?.Host ?? ''
+  ).toLowerCase();
   const isLocalHost = host.includes('localhost') || host.includes('127.0.0.1');
 
   if (isLocalHost) {
