@@ -132,11 +132,6 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
             ? `Postal Code: ${item.postalCode}`
             : `Location: ${item.latitude.toFixed(4)}, ${item.longitude.toFixed(4)}`;
 
-          const nextCheckTime = new Date((item.nextCheckAt + item.notifyAfterHours * 3600) * 1000);
-          const nextCheckTimeString = nextCheckTime.toLocaleString('en-SG', {
-            timeZone: 'Asia/Singapore',
-          });
-
           await sesClient.send(
             new SendEmailCommand({
               Source: senderEmail,
@@ -154,8 +149,6 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
                       `${locationDisplay}\n\n` +
                       `DETAILS\n` +
                       `${latest.summary ?? 'No additional details available.'}\n\n` +
-                      `NEXT UPDATE\n` +
-                      `You'll receive your next check-in on ${nextCheckTimeString} SGT\n\n` +
                       `SCORE BREAKDOWN\n` +
                       `Your recommendation is based on analyzing:\n` +
                       `• Weather (30% weight): Temperature and forecast conditions\n` +
