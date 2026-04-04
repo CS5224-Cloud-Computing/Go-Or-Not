@@ -182,7 +182,7 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
             TableName: notificationsTable,
             Key: { subscriptionKey: item.subscriptionKey },
             UpdateExpression:
-              'SET #status = :status, updatedAt = :updatedAt REMOVE verificationToken',
+              'SET #status = :status, updatedAt = :updatedAt, lastAttemptAt = :updatedAt REMOVE verificationToken, lastError',
             ExpressionAttributeNames: { '#status': 'status' },
             ExpressionAttributeValues: {
               ':status': 'NOTIFIED',
@@ -195,6 +195,20 @@ export const handler = async (): Promise<APIGatewayProxyResult> => {
       } catch (err: unknown) {
         const reason = err instanceof Error ? err.message : 'Unknown error';
         errors.push({ subscriptionKey: item.subscriptionKey, reason });
+
+        await dynamoDb.send(
+          new UpdateCommand({
+            TableName: notificationsTable,
+            Key: { subscriptionKey: item.subscriptionKey },
+            UpdateExpression:
+              'SET updatedAt = :updatedAt, lastAttemptAt = :updatedAt, lastError = :lastError ADD attemptCount :attemptInc',
+            ExpressionAttributeValues: {
+              ':updatedAt': nowEpoch,
+              ':lastError': reason.slice(0, 1000),
+              ':attemptInc': 1,
+            },
+          }),
+        );
       }
     }
 

@@ -192,12 +192,15 @@ This project follows Git Flow for deployments across AWS Amplify:
 
 Production (`main` branch):
 - `SENDER_EMAIL` — Verified SES email identity for notifications
-- `APP_BASE_URL` — Frontend URL (e.g., `https://example.com`)
+- `APP_BASE_URL_PROD` — Production frontend URL (e.g., `https://main.<app-id>.amplifyapp.com`)
+- `VITE_API_BASE_URL_PROD` — Production API Gateway base URL (must point to `/prod` stage)
 - `GOOGLE_MAPS_API_KEY` — Optional, for postal code geocoding
 - `SERVERLESS_ACCESS_KEY` or `SERVERLESS_LICENSE_KEY` — Serverless Framework auth
 
 Development (`dev` branch):
-- Same as production, but with dev endpoints
+- `APP_BASE_URL_DEV` — Development frontend URL (e.g., `https://dev.<app-id>.amplifyapp.com`)
+- `VITE_API_BASE_URL_DEV` — Development API Gateway base URL (must point to `/dev` stage)
+- `SENDER_EMAIL`, `GOOGLE_MAPS_API_KEY`, and Serverless auth vars can be shared with prod
 
 #### Local Development (.env files)
 
