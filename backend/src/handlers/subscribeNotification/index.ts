@@ -149,7 +149,7 @@ export const handler = async (
                   `${verifyUrl.toString()}\n\n` +
                   `SUBSCRIPTION DETAILS\n` +
                   `${locationDisplay}\n` +
-                  `Update Frequency: Every ${notifyAfterHours} hour(s)\n\n` +
+                  `Update Timing: In ${notifyAfterHours} hour(s)\n\n` +
                   `WHAT YOU'LL RECEIVE\n` +
                   `Once verified, you'll get timely recommendations about whether it's a good time to go out, based on:\n` +
                   `🌤️  Weather conditions and temperature\n` +
