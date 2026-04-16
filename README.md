@@ -50,7 +50,6 @@ Default local URLs:
 - Backend: http://localhost:3001
 
 ## Branching Strategy
-
 This project follows Git Flow for deployments across AWS Amplify:
 
 - **`main` branch** → **Production** (`prod` stage)
@@ -61,7 +60,6 @@ This project follows Git Flow for deployments across AWS Amplify:
 - **`dev` branch** → **Development** (`dev` stage)
   - Testing and staging environment
   - Integration point for feature branches
-  - Unstable, for testing features before production
 
 - **Feature branches** → Deploy to `dev` stage
   - Branch off from `dev`: `git checkout -b feature/your-feature dev`
@@ -69,7 +67,6 @@ This project follows Git Flow for deployments across AWS Amplify:
   - Once tested and approved in `dev`, merge to `main` for production
 
 ## Release workflow
-
 1. Create feature branch from `dev` brnach.
 2. Make changes and test locally.
 3. Open PR from feature branch to `dev` branch. 
