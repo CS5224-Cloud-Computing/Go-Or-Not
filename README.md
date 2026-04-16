@@ -3,9 +3,13 @@
 Go-Or-Not is a weather and traffic advisory application that helps users decide whether to go out based on weather, traffic, parking availability, and other conditions. The app provides personalized recommendations via a web interface and email notifications.
 
 ### Test email account
-Since SES is still in sandbox mode, this recipient email has been verified to receive notifications from AWS SES:
+Since [Amazon Simple Email Service is still in sandbox mode](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html), you can use this verified recipient email to receive notifications from AWS SES:
 - **Email**: goornot.5224@gmail.com
 - **Password**: Gocs5224
+
+### Deployed environments on AWS Amplify
+- **Production**: https://main.d2l2ppb3x2rlif.amplifyapp.com/ 
+- **Development**: https://dev.d2l2ppb3x2rlif.amplifyapp.com/ 
 
 ## Table of contents
 - [Documentation](#documentation)
@@ -15,7 +19,6 @@ Since SES is still in sandbox mode, this recipient email has been verified to re
 - [Environment and stage configuration](#environment-and-stage-configuration)
 - [Amplify branch mapping](#amplify-branch-mapping)
 - [CI/CD workflows (GitHub Actions)](#cicd-workflows-github-actions)
-- [Required GitHub secrets](#required-github-secrets)
 - [Monitoring deployments](#monitoring-deployments)
 
 ## Documentation
