@@ -218,7 +218,7 @@ const ShouldIGo = () => {
     setLoading(true);
     try {
       const parkingRes = await fetch(
-        `http://localhost:3001/parking?latitude=${latitude}&longitude=${longitude}`,
+        `${API_BASE_URL}/parking?latitude=${latitude}&longitude=${longitude}`,
       );
 
       if (!parkingRes.ok) {

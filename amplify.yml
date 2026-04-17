@@ -29,6 +29,7 @@ backend:
             exit 1
           fi
         - npx serverless deploy --stage $STAGE --region ap-southeast-1
+        - node scripts/upload.mjs --stage $STAGE --region ap-southeast-1
 
 frontend:
   phases:

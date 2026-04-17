@@ -23,6 +23,13 @@ export class CarparkService {
       this.getAvailability(),
     ]);
 
+    const availabilityByCarparkNumber = new Map(
+      availability.map((item) => [
+        this.normalizeCarparkNumber(item.carpark_number),
+        item,
+      ]),
+    );
+
     return metadata
       .map((cp) => ({
         ...cp,
@@ -35,8 +42,8 @@ export class CarparkService {
       }))
       .filter((cp) => cp.distance! <= radiusKm)
       .map((cp) => {
-        const avail = availability.find(
-          (a) => a.carpark_number === cp.carpark_number,
+        const avail = availabilityByCarparkNumber.get(
+          this.normalizeCarparkNumber(cp.carpark_number ?? cp.car_park_no ?? ''),
         );
         const carInfo = avail?.carpark_info.find(
           (info) => info.lot_type === 'C'
@@ -90,6 +97,10 @@ export class CarparkService {
         },
       )
     ).data;
+  }
+
+  private normalizeCarparkNumber(carparkNumber: string): string {
+    return carparkNumber.trim().toUpperCase();
   }
 
   private calculateHaversine(
