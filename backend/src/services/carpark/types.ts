@@ -1,5 +1,6 @@
 export interface CarparkMetadata {
   carpark_number: string;
+  car_park_no?: string;
   address: string;
   latitude: number;
   longitude: number;

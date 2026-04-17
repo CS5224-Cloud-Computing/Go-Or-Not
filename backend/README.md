@@ -340,7 +340,9 @@ Available scripts:
 - `npm run docker:up`: start DynamoDB Local
 - `npm run docker:down`: stop DynamoDB Local
 - `npm run dynamodb:create-table`: create DynamoDB tables from IaC
-- `npm run dynamodb:seed`: seed carpark metadata table
+- `npm run dynamodb:seed`: seed local `carpark-metadata-dev` (DynamoDB Local)
+- `npm run dynamodb:seed:cloud:dev`: upsert metadata into deployed `dev` table
+- `npm run dynamodb:seed:cloud:prod`: upsert metadata into deployed `prod` table
 - `npm run build`: package serverless artifacts
 - `npm run deploy`: deploy default stage
 - `npm run deploy:prod`: deploy prod stage
@@ -350,6 +352,8 @@ Available scripts:
 - Default stage is `dev`
 - Stage-aware resource naming avoids table collisions:
   - `cache-dev`, `cache-prod`, etc
+- Carpark availability depends on `carpark-metadata-{stage}` being populated; each stage must be seeded.
+- `amplify.yml` now runs metadata seeding after backend deploy for the active stage.
 - Region defaults to `ap-southeast-1` unless overridden
 
 ## How to extend
